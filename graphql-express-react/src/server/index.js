@@ -3,6 +3,7 @@ const cors = require("cors");
 const { graphqlHTTP } = require("express-graphql");
 const gql = require("graphql-tag");
 const { buildASTSchema } = require("graphql");
+const e = require("express");
 
 const POSTS = [
   { author: "John Doe", body: "Hello world" },
@@ -20,6 +21,16 @@ const schema = buildASTSchema(gql`
     author: String
     body: String
   }
+
+  type Mutation {
+    createPost(input: PostInput!): Post
+  }
+
+  input PostInput {
+    id: ID
+    author: String!
+    body: String!
+  }
 `);
 
 const mapPost = (post, id) => post && { id, ...post };
@@ -27,6 +38,20 @@ const mapPost = (post, id) => post && { id, ...post };
 const root = {
   posts: () => POSTS.map(mapPost),
   post: ({ id }) => mapPost(POSTS[id], id),
+  createPost: ({ input: { id, author, body } }) => {
+    const post = { author, body };
+    let index = POSTS.length;
+    debugger;
+    console.log(`index: ${index}`);
+    if (id !== null && id >= 0 && id < POSTS.length) {
+      POSTS.splice(id, 1, post);
+      index = id;
+    } else {
+      POSTS.push(post);
+      console.log(`index: ${index}`);
+    }
+    return mapPost(post, index);
+  },
 };
 
 const app = express();
